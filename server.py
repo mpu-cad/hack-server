@@ -1,18 +1,13 @@
 from fastapi import FastAPI
 import time
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 app = FastAPI()
-
-# Эмулируем сложное вычисление (1.5-2 секунды)
-def heavy_computation():
-    time.sleep(1.5 + 0.5 * (hash(str(time.time())) % 10) / 10)  # Рандомно 1.5-2 сек
-    return {"result": "ok"}
+executor = ThreadPoolExecutor(max_workers=200)  # Пул на 200 потоков
 
 @app.post("/compute")
 async def compute():
-    result = heavy_computation()
-    return result
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(executor, time.sleep, 0.01)  # Не блокируем event loop
+    return {"result": "ok"}
